@@ -6,6 +6,7 @@ import com.knowgap.knowgap.security.services.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -20,6 +21,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
+
     @Autowired
     UserDetailsServiceImpl userDetailsService;
 
@@ -51,17 +53,23 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.cors(org.springframework.security.config.Customizer.withDefaults())
+        http
+            .cors(cors -> {})
             .csrf(csrf -> csrf.disable())
             .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> 
-                auth.requestMatchers("/api/auth/**").permitAll()
-                    .requestMatchers("/api/home").permitAll()
-                    .requestMatchers("/api/ai/**").authenticated()
-                    .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
-                    .requestMatchers("/error").permitAll()
-                    .anyRequest().authenticated()
+            .authorizeHttpRequests(auth -> auth
+                // ✅ PUBLIC ENDPOINTS
+                .requestMatchers("/", "/api/auth/**", "/api/home", "/error").permitAll()
+                
+                // ✅ Allow preflight requests
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                
+                // 🔒 PROTECTED
+                .requestMatchers("/api/ai/**").authenticated()
+                
+                // 🔒 Everything else protected
+                .anyRequest().authenticated()
             );
 
         http.authenticationProvider(authenticationProvider());
