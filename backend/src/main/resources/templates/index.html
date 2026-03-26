@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Knowgap Home</title>
+</head>
+<body>
+    <h1>Welcome to <span th:text="${appName}">Knowgap</span></h1>
+    <p>Java version target: <strong th:text="${javaVersion}">21</strong></p>
+    <p>Spring Boot version: <strong th:text="${springBootVersion}">3.5</strong></p>
+    <p><a th:href="@{'/error'}">Trigger custom /error page</a></p>
+</body>
+</html>

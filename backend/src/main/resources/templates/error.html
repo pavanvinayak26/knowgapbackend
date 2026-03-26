@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Knowgap Error</title>
+</head>
+<body>
+    <h1>Error occurred</h1>
+    <p>Status: <span th:text="${status}">404</span></p>
+    <p>Message: <span th:text="${error}">Not Found</span></p>
+    <a href="/home">Go to Home</a>
+</body>
+</html>
