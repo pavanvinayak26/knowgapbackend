@@ -26,12 +26,17 @@ public class DatabaseSeeder implements CommandLineRunner {
     private boolean resetDataOnStartup;
 
     private boolean tableExists(String tableName) {
-        Integer count = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ?",
-                Integer.class,
-                tableName
-        );
-        return count != null && count > 0;
+        try {
+            Integer count = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = ?",
+                    Integer.class,
+                    tableName
+            );
+            return count != null && count > 0;
+        } catch (Exception e) {
+            // Return false if query fails
+            return false;
+        }
     }
 
     private void safeExecute(String sql) {
@@ -97,19 +102,18 @@ public class DatabaseSeeder implements CommandLineRunner {
      */
     private void fixQuizAttemptsFk() {
         try {
-            // Collect every FK constraint on quiz_attempts.user_id
+            // Collect every FK constraint on quiz_attempts.user_id (PostgreSQL version)
             List<String> allFks = jdbcTemplate.queryForList(
-                    "SELECT CONSTRAINT_NAME FROM information_schema.KEY_COLUMN_USAGE " +
-                    "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'quiz_attempts' " +
-                    "AND COLUMN_NAME = 'user_id' AND REFERENCED_TABLE_NAME IS NOT NULL",
+                    "SELECT constraint_name FROM information_schema.table_constraints " +
+                    "WHERE constraint_type = 'FOREIGN KEY' AND table_name = 'quiz_attempts'",
                     String.class
             );
             // Drop them all (use safeExecute so we survive if one is already gone)
             for (String fk : allFks) {
-                safeExecute("ALTER TABLE quiz_attempts DROP FOREIGN KEY `" + fk + "`");
+                safeExecute("ALTER TABLE quiz_attempts DROP CONSTRAINT \"" + fk + "\"");
             }
             // Re-add the single correct FK pointing to users(id)
-            jdbcTemplate.execute(
+            safeExecute(
                     "ALTER TABLE quiz_attempts ADD CONSTRAINT fk_qa_users " +
                     "FOREIGN KEY (user_id) REFERENCES users(id)"
             );
