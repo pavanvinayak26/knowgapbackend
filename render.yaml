@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: knowgap-backend
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    buildCommand: ""
+    startCommand: ""
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: knowgap-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: knowgap-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: knowgap-db
+          property: password
+
+databases:
+  - name: knowgap-db
+    databaseName: knowgap
+    user: knowgap_user
